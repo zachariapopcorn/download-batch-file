@@ -1,20 +1,22 @@
-using System;
+﻿using System;
 using System.Net.Http;
 using System.IO;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 class Program {
-    public static void Main(string[] args) {
+    public static async Task Main(string[] args) {
         if(args.Length == 0) {
             Console.WriteLine("No URL provided");
             return;
         }
-        HttpClient client = new HttpClient();
         string url = args[0];
         string body;
         try {
-            HttpResponseMessage res = client.GetAsync(url).Result;
-            body = res.Content.ReadAsStringAsync().Result;
+            using (HttpClient client = new HttpClient()) {
+                HttpResponseMessage res = await client.GetAsync(url);
+                body = await res.Content.ReadAsStringAsync();
+            }
         } catch(Exception e) {
             Console.WriteLine($"Error while fetching content: {e.Message}");
             return;
@@ -26,11 +28,12 @@ class Program {
         await ExecuteCommandAsync(filePath);
     }
 
-    public static void ExecuteCommand(string command) {
+    public static Task ExecuteCommandAsync(string command) {
         ProcessStartInfo processInfo = new ProcessStartInfo("cmd.exe", $"/c \"{command}\"");
         processInfo.CreateNoWindow = true;
         processInfo.UseShellExecute = true;
-        Process process = Process.Start(processInfo);
-        process.WaitForExit();
+        using (Process process = Process.Start(processInfo)) {
+            return process.WaitForExitAsync();
+        }
     }
 }
